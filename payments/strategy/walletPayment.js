@@ -3,6 +3,7 @@ const PaymentStrategy = require('./paymentStrategy');
 
 class WalletPayment extends PaymentStrategy {
     constructor(walletProvider) {
+        super();
         this.walletProvider = walletProvider;
     }
 
