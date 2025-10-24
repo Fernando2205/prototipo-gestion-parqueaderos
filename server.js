@@ -10,6 +10,7 @@ const AdminDashboard = require('./sensors/observers/AdminDashboard');
 const MobileApp = require('./sensors/observers/MobileApp');
 const BillingSystem = require('./sensors/observers/BillingSystem');
 
+const PaymentContext = require('./payments/PaymentContext');
 const CardPayment = require('./payments/strategy/cardPayment');
 const CashPayment = require('./payments/strategy/cashPayment');
 const WalletPayment = require('./payments/strategy/walletPayment');
@@ -137,62 +138,64 @@ app.post('/api/payments', (req, res) => {
         });
     }
     
-    let payment;
-    
-    switch(method) {
-        case 'card':
-            if (!cardNumber || !cardHolder) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Para tarjeta se requiere: cardNumber y cardHolder'
-                });
-            }
-            payment = new CardPayment(cardNumber, cardHolder);
-            break;
-            
-        case 'cash':
-            payment = new CashPayment();
-            break;
-            
-        case 'wallet':
-            if (!provider) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Para billetera se requiere: provider'
-                });
-            }
-            payment = new WalletPayment(provider);
-            break;
-            
-        default:
-            return res.status(400).json({
-                success: false,
-                message: 'Método de pago no válido. Use: card, cash o wallet'
-            });
-    }
-    
-    const result = payment.pay(amount);
-    
-    // Guardar en historial
-    const historyEntry = {
-        id: paymentHistory.length + 1,
-        timestamp: new Date().toISOString(),
-        method: result.method,
-        amount: result.amount,
-        details: {
-            cardHolder: result.cardHolder || null,
-            lastFourDigits: result.lastFourDigits || null,
-            provider: result.provider || null
+    try {
+        // Crear la estrategia apropiada
+        let strategy;
+        
+        switch(method) {
+            case 'card':
+                if (!cardNumber || !cardHolder) {
+                    throw new Error('Para tarjeta se requiere: cardNumber y cardHolder');
+                }
+                strategy = new CardPayment(cardNumber, cardHolder);
+                break;
+                
+            case 'cash':
+                strategy = new CashPayment();
+                break;
+                
+            case 'wallet':
+                if (!provider) {
+                    throw new Error('Para billetera se requiere: provider');
+                }
+                strategy = new WalletPayment(provider);
+                break;
+                
+            default:
+                throw new Error('Método de pago no válido. Use: card, cash o wallet');
         }
-    };
-    
-    paymentHistory.push(historyEntry);
-    
-    res.json({
-        success: true,
-        payment: result,
-        historyEntry
-    });
+        
+        // Crear contexto y ejecutar el pago
+        const paymentContext = new PaymentContext();
+        paymentContext.setStrategy(strategy);
+        const result = paymentContext.executePayment(amount);
+        
+        // Guardar en historial
+        const historyEntry = {
+            id: paymentHistory.length + 1,
+            timestamp: new Date().toISOString(),
+            method: result.method,
+            amount: result.amount,
+            details: {
+                cardHolder: result.cardHolder || null,
+                lastFourDigits: result.lastFourDigits || null,
+                provider: result.provider || null
+            }
+        };
+        
+        paymentHistory.push(historyEntry);
+        
+        res.json({
+            success: true,
+            payment: result,
+            historyEntry
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
 });
 
 // ============================================================

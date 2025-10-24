@@ -3,7 +3,6 @@ const PaymentStrategy = require('./paymentStrategy');
 
 class CardPayment extends PaymentStrategy {
     constructor(cardNumber, cardHolder) {
-        super();
         this.cardNumber = cardNumber;
         this.cardHolder = cardHolder;
     }
