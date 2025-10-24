@@ -8,10 +8,15 @@ class WalletPayment extends PaymentStrategy {
     }
 
     pay(amount) {
-        console.log(`\n Pago con billetera digital procesado`);
+        console.log(`\n📱 Pago con billetera digital procesado`);
         console.log(`   Proveedor: ${this.walletProvider}`);
         console.log(`   Monto: $${amount}`);
-        return { success: true, method: 'Billetera Digital', amount };
+        return { 
+            success: true, 
+            method: 'Billetera Digital', 
+            amount,
+            provider: this.walletProvider
+        };
     }
 }
 

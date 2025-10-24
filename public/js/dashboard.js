@@ -184,6 +184,7 @@
                 });
                 
                 const data = await response.json();
+                
                 if (data.success) {
                     showToast(`Pago procesado: $${data.payment.amount} - ${data.payment.method}`, 'success');
                     await loadPaymentHistory(); // Recargar historial
@@ -242,93 +243,60 @@
         
         // Obtener detalles del pago
         function getPaymentDetails(payment) {
-            if (payment.details.cardHolder) {
+            // Verificar si hay detalles de tarjeta
+            if (payment.details && payment.details.cardHolder && payment.details.lastFourDigits) {
                 return `${payment.details.cardHolder} •••• ${payment.details.lastFourDigits}`;
-            } else if (payment.details.provider) {
-                return payment.details.provider;
             }
-            return 'Pago en efectivo';
+            
+            // Verificar si hay detalles de billetera
+            if (payment.details && payment.details.provider) {
+                return `Proveedor: ${payment.details.provider}`;
+            }
+            
+            // Para efectivo o cualquier otro caso
+            if (payment.method === 'Efectivo') {
+                return 'Pago en efectivo';
+            }
+            
+            // Fallback genérico
+            return `Pago realizado vía ${payment.method}`;
         }
 
-        function formatSensorTimestamp(rawValue) {
-            if (!rawValue && rawValue !== 0) {
-                return '';
-            }
-
-            const parsedDate = parseDateValue(rawValue);
-            if (!parsedDate) {
-                return typeof rawValue === 'string' ? rawValue : '';
-            }
-
+        // Formatear fecha de sensores
+        function formatSensorTimestamp(timestamp) {
+            if (!timestamp) return '';
+            
             try {
+                const date = new Date(timestamp);
                 return new Intl.DateTimeFormat('es-CO', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
-                }).format(parsedDate);
+                }).format(date);
             } catch (error) {
-                return parsedDate.toLocaleString('es-CO');
+                return timestamp;
             }
         }
 
-        // Intenta normalizar fechas provenientes de múltiples formatos para evitar "Invalid Date".
+        // Formatear fecha de pagos
         function formatPaymentDate(payment) {
-            const dateValue = payment.timestamp ?? payment.date ?? payment.createdAt ?? payment.datetime ?? null;
-            const parsedDate = parseDateValue(dateValue);
-
-            if (!parsedDate) {
-                return typeof dateValue === 'string' && dateValue.trim() ? dateValue : 'Fecha no disponible';
-            }
-
+            const timestamp = payment.timestamp;
+            if (!timestamp) return 'Fecha no disponible';
+            
             try {
+                const date = new Date(timestamp);
                 return new Intl.DateTimeFormat('es-CO', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
-                }).format(parsedDate);
+                }).format(date);
             } catch (error) {
-                return parsedDate.toLocaleString('es-CO');
+                return 'Fecha no disponible';
             }
-        }
-
-        function parseDateValue(value) {
-            if (!value && value !== 0) return null;
-
-            if (value instanceof Date) {
-                return Number.isNaN(value.getTime()) ? null : value;
-            }
-
-            if (typeof value === 'number') {
-                const fromNumber = new Date(value);
-                return Number.isNaN(fromNumber.getTime()) ? null : fromNumber;
-            }
-
-            if (typeof value === 'string') {
-                const trimmed = value.trim();
-                if (!trimmed) return null;
-
-                const direct = new Date(trimmed);
-                if (!Number.isNaN(direct.getTime())) return direct;
-
-                const match = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
-                if (match) {
-                    let [, day, month, year, hour = '00', minute = '00', second = '00'] = match;
-                    const numericYear = parseInt(year, 10);
-                    const resolvedYear = year.length === 2
-                        ? (numericYear >= 70 ? 1900 + numericYear : 2000 + numericYear)
-                        : numericYear;
-
-                    const isoCandidate = `${resolvedYear.toString().padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${second.padStart(2, '0')}`;
-                    const fallback = new Date(isoCandidate);
-                    if (!Number.isNaN(fallback.getTime())) return fallback;
-                }
-            }
-
-            return null;
         }
         
         // Mostrar toast

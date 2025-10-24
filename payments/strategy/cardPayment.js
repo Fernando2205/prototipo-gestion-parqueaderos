@@ -9,11 +9,17 @@ class CardPayment extends PaymentStrategy {
     }
 
     pay(amount) {
-        console.log(`\n Pago con tarjeta procesado`);
+        console.log(`\n💳 Pago con tarjeta procesado`);
         console.log(`   Titular: ${this.cardHolder}`);
         console.log(`   Tarjeta: **** ${this.cardNumber.slice(-4)}`);
         console.log(`   Monto: $${amount}`);
-        return { success: true, method: 'Tarjeta', amount };
+        return { 
+            success: true, 
+            method: 'Tarjeta', 
+            amount,
+            cardHolder: this.cardHolder,
+            lastFourDigits: this.cardNumber.slice(-4)
+        };
     }
 }
 

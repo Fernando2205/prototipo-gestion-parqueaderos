@@ -3,9 +3,13 @@ const PaymentStrategy = require('./paymentStrategy');
 
 class CashPayment extends PaymentStrategy {
     pay(amount) {
-        console.log(`\n Pago en efectivo procesado`);
+        console.log(`\n💵 Pago en efectivo procesado`);
         console.log(`   Monto: $${amount}`);
-        return { success: true, method: 'Efectivo', amount };
+        return { 
+            success: true, 
+            method: 'Efectivo', 
+            amount 
+        };
     }
 }
 
