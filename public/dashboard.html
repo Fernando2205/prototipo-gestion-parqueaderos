@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestión Parqueaderos</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dashboard de Gestión de Parqueaderos</h1>
+            <p>Sistema con Patrones Observer y Strategy</p>
+        </header>
+        
+        <!-- Estadísticas -->
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h3>Total Espacios</h3>
+                <div class="stat-value" id="totalSpaces">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Espacios Ocupados</h3>
+                <div class="stat-value" id="occupiedSpaces">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Espacios Disponibles</h3>
+                <div class="stat-value" id="availableSpaces">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Tasa de Ocupación</h3>
+                <div class="stat-value" id="occupancyRate">0%</div>
+            </div>
+        </div>
+        
+        <!-- Sensores -->
+        <section>
+            <h2>Espacios de Parqueo</h2>
+            <div id="sensors-grid"></div>
+        </section>
+        
+        <!-- Sección de Pagos -->
+        <section id="payment-section">
+            <h2>Procesar Pago (Patrón Strategy)</h2>
+            <div id="paymentContext" class="payment-context" hidden>
+                <div class="context-info">
+                    <div class="context-title">Pago pendiente</div>
+                    <div class="context-tags">
+                        <span class="context-chip" id="paymentContextSpace"></span>
+                        <span class="context-chip subtle" id="paymentContextPlate" hidden></span>
+                        <span class="context-chip amount" id="paymentContextAmount" hidden></span>
+                    </div>
+                </div>
+                <button id="clearPaymentContextBtn" type="button" class="context-clear" aria-label="Liberar asociación de pago">
+                    Liberar
+                </button>
+            </div>
+            <div class="form-group">
+                <label>Método de Pago</label>
+                <select id="paymentMethod">
+                    <option value="card">Tarjeta de Crédito/Débito</option>
+                    <option value="cash">Efectivo</option>
+                    <option value="wallet">Billetera Digital</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Monto</label>
+                <input type="number" id="paymentAmount" value="9000" min="0">
+            </div>
+            
+            <div id="cardFields">
+                <div class="form-group">
+                    <label>Número de Tarjeta</label>
+                    <input type="text" id="cardNumber" value="4532-1234-5678-9012">
+                </div>
+                <div class="form-group">
+                    <label>Titular</label>
+                    <input type="text" id="cardHolder" value="Juan Pérez">
+                </div>
+            </div>
+            
+            <div id="walletFields" style="display: none;">
+                <div class="form-group">
+                    <label>Proveedor</label>
+                    <input type="text" id="walletProvider" value="Nequi">
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="processPayment()">Procesar Pago</button>
+        </section>
+
+        <!-- Historial de Pagos -->
+        <section>
+            <h2>Historial de Pagos</h2>
+            <div id="paymentHistory" class="payment-history">
+                <p class="no-data">No hay pagos registrados</p>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Modal para entrada de vehículo -->
+    <div class="modal" id="entryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registrar Entrada</h2>
+            </div>
+            <div class="modal-body">
+                <p>Sensor: <strong id="modalSensorId"></strong></p>
+                <div class="form-group">
+                    <label>Placa del vehículo</label>
+                    <input type="text" id="vehiclePlate" placeholder="ABC-123">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn-primary" onclick="confirmEntry()">Confirmar Entrada</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast para notificaciones -->
+    <div id="toast"></div>
+    
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
